@@ -8,19 +8,50 @@ local config = {
   iflag = ~(serial.IXON | serial.IXOFF | serial.IXANY),
   oflag = 0,
   lflag = 0,
-  cc={
-    [serial.VMIN]=0,
-    [serial.VTIME]=5,
+  cc = {
+    [serial.VMIN] = 0,
+    [serial.VTIME] = 5,
   },
 }
 
 playdate = {}
 
+function playdate.send(msg)
+  if playdate.dev then
+    _norns.serial_send(playdate.dev, "msg "..msg.."\n")
+  end
+end
+
+function playdate.run(path)
+  if playdate.dev then
+      _norns.serial_send(playdate.dev, "run "..path.."\n")
+  end
+end
+
+function playdate.controller_start()
+  if playdate.dev then
+    _norns.serial_send(playdate.dev, "controller start\n")
+  end
+end
+
+function playdate.controller_stop()
+  if playdate.dev then
+    _norns.serial_send(playdate.dev, "controller stop\n")
+  end
+end
+
+function playdate.connected()
+  return playdate.dev ~= nil
+end
+
 _norns.playdate = {}
 
 function _norns.playdate.init()
-  playdate.add = nil
-  playdate.remove = nil
+  playdate.dev = nil
+  playdate.add = function(id, name, dev)
+      print(">>>>>> playdate.add / " .. id .. " / " .. name)
+  end
+  playdate.remove = function(id) print(">>>>>> playdate.remove " .. id) end
   playdate.event = nil
   playdate.accel = nil
   playdate.button = nil
@@ -29,18 +60,22 @@ function _norns.playdate.init()
 end
 
 function _norns.playdate.add(id, name, dev)
-  print("playdate add: "..id.." "..name)
+  print("playdate add: " .. id .. " " .. name)
   serial.send(dev, "echo off\n")
+  playdate.dev = dev
+  playdate.add(id, name, dev)
 end
 
 function _norns.playdate.remove(id)
-  print("playdate remove: "..id)
+  print("playdate remove: " .. id)
+  playdate.dev = nil
+  playdate.remove(id)
 end
 
 local ebuffer = ""
 function _norns.playdate.event(id, line)
   local function evalplaydate(line)
-    line = ebuffer..line
+    line = ebuffer .. line
     ebuffer = ""
     if line == "echo off" then
       return
@@ -72,33 +107,33 @@ function _norns.playdate.event(id, line)
       end
     else
       if playdate.event ~= nil then
-          playdate.event(line)
+        playdate.event(line)
       end
     end
   end
-  
+
   local n, m = line:find("%c+")
   if not n then
-    ebuffer = ebuffer..line
+    ebuffer = ebuffer .. line
   else
-    evalplaydate(line:sub(1, n-1))
+    evalplaydate(line:sub(1, n - 1))
     if m < #line then
-      _norns.playdate.event(id, line:sub(m+1, -1))
+      _norns.playdate.event(id, line:sub(m + 1, -1))
     end
   end
 end
 
 mod.hook.register("system_startup", "playdate device", function()
-  serial.handler{
-    id="playdate",
-    configure=function(vendor, model)
+  serial.handler {
+    id = "playdate",
+    configure = function(vendor, model)
       if vendor == "Panic_Inc" and model == "Playdate" then
         return config
       end
     end,
-    add=_norns.playdate.add,
-    remove=_norns.playdate.remove,
-    event=_norns.playdate.event,
+    add = _norns.playdate.add,
+    remove = _norns.playdate.remove,
+    event = _norns.playdate.event,
   }
 end)
 
