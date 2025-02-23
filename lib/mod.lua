@@ -1,19 +1,6 @@
 local mod = require('core/mods')
 local serial = require('core/serial')
 
-local config = {
-  ispeed = serial.B115200,
-  ospeed = serial.B115200,
-  cflag = serial.CS8 | serial.CLOCAL | serial.CREAD,
-  iflag = ~(serial.IXON | serial.IXOFF | serial.IXANY),
-  oflag = 0,
-  lflag = 0,
-  cc = {
-    [serial.VMIN] = 0,
-    [serial.VTIME] = 5,
-  },
-}
-
 playdate = {}
 
 function playdate.send(msg)
@@ -122,6 +109,19 @@ function _norns.playdate.event(id, line)
     end
   end
 end
+
+local config = {
+  ispeed = serial.B115200,
+  ospeed = serial.B115200,
+  cflag = serial.CS8 | serial.CLOCAL | serial.CREAD,
+  iflag = ~(serial.IXON | serial.IXOFF | serial.IXANY),
+  oflag = 0,
+  lflag = 0,
+  cc = {
+    [serial.VMIN] = 0,
+    [serial.VTIME] = 5,
+  },
+}
 
 mod.hook.register("system_startup", "playdate device", function()
   serial.handler {
