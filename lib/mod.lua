@@ -34,9 +34,8 @@ end
 _norns.playdate = {}
 
 function _norns.playdate.init()
-  playdate.dev = nil
   playdate.add = function(id, name, dev)
-      print(">>>>>> playdate.add / " .. id .. " / " .. name)
+    print(">>>>>> playdate.add / " .. id .. " / " .. name)
   end
   playdate.remove = function(id) print(">>>>>> playdate.remove " .. id) end
   playdate.event = nil
@@ -137,10 +136,8 @@ mod.hook.register("system_startup", "playdate device", function()
   }
 end)
 
-mod.hook.register("script_pre_init", "init playdate device handlers", function()
+mod.hook.register("script_post_cleanup", "cleanup playdate device handlers", function()
   _norns.playdate.init()
 end)
 
-mod.hook.register("script_post_cleanup", "init playdate device handlers", function()
-  _norns.playdate.init()
-end)
+_norns.playdate.init()
