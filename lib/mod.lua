@@ -5,7 +5,8 @@ playdate = {}
 
 function playdate.send(msg)
   if playdate.dev then
-    _norns.serial_send(playdate.dev, "msg "..msg.."\n")
+    local cmd = "msg "..msg.."\n"
+    _norns.serial_send(playdate.dev, cmd)
   end
 end
 
@@ -32,10 +33,13 @@ function playdate.connected()
 end
 
 _norns.playdate = {}
+_norns.playdate.add_hooks = {}
+_norns.playdate.remove_hooks = {}
+_norns.playdate.event_hooks = {}
 
 function _norns.playdate.init()
   playdate.add = function(id, name, dev)
-    print(">>>>>> playdate.add / " .. id .. " / " .. name)
+      print(">>>>>> playdate.add / " .. id .. " / " .. name)
   end
   playdate.remove = function(id) print(">>>>>> playdate.remove " .. id) end
   playdate.event = nil
@@ -47,6 +51,9 @@ end
 
 function _norns.playdate.add(id, name, dev)
   print("playdate add: " .. id .. " " .. name)
+  for _, hook in ipairs(_norns.playdate.add_hooks) do
+    hook(id, name, dev)
+  end
   serial.send(dev, "echo off\n")
   playdate.dev = dev
   playdate.add(id, name, dev)
@@ -54,6 +61,9 @@ end
 
 function _norns.playdate.remove(id)
   print("playdate remove: " .. id)
+  for _, hook in ipairs(_norns.playdate.remove_hooks) do
+    hook(id)
+  end
   playdate.dev = nil
   playdate.remove(id)
 end
@@ -92,6 +102,9 @@ function _norns.playdate.event(id, line)
         end
       end
     else
+      for _, hook in ipairs(_norns.playdate.event_hooks) do
+        hook(id, line)
+      end
       if playdate.event ~= nil then
         playdate.event(line)
       end
