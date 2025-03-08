@@ -5,6 +5,7 @@ playdate = {}
 
 function playdate.send(msg)
   if playdate.dev then
+    -- print(msg)
     local cmd = "msg "..msg.."\n"
     _norns.serial_send(playdate.dev, cmd)
   end
@@ -122,26 +123,22 @@ function _norns.playdate.event(id, line)
   end
 end
 
-local config = {
-  ispeed = serial.B115200,
-  ospeed = serial.B115200,
-  cflag = serial.CS8 | serial.CLOCAL | serial.CREAD,
-  iflag = ~(serial.IXON | serial.IXOFF | serial.IXANY),
-  oflag = 0,
-  lflag = 0,
-  cc = {
-    [serial.VMIN] = 0,
-    [serial.VTIME] = 5,
-  },
-}
-
 mod.hook.register("system_startup", "playdate device", function()
   serial.handler {
     id = "playdate",
-    configure = function(vendor, model)
-      if vendor == "Panic_Inc" and model == "Playdate" then
-        return config
-      end
+    match = function(vendor, model)
+      return vendor == "Panic_Inc" and model == "Playdate"
+    end,
+    configure = function(tio)
+      tio.ispeed = serial.B115200
+      tio.ospeed = serial.B115200
+      tio.cflag = tio.cflag | serial.CS8 | serial.CLOCAL | serial.CREAD
+      tio.iflag = tio.iflag & ~(serial.IXON | serial.IXOFF | serial.IXANY)
+      tio.oflag = 0
+      tio.lflag = 0
+      tio.cc[serial.VMIN] = 0
+      tio.cc[serial.VTIME] = 5
+      return tio
     end,
     add = _norns.playdate.add,
     remove = _norns.playdate.remove,
