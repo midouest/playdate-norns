@@ -1,5 +1,28 @@
 local mod = require('core/mods')
 local serial = require('core/serial')
+local tab = require 'tabutil'
+
+local Hook = {}
+Hook.__index = Hook
+
+function Hook.new()
+  local this = {}
+  this.callbacks = {}
+  return setmetatable(this, Hook)
+end
+
+function Hook:register(name, func)
+  self.callbacks[name] = func
+end
+
+function Hook:__call(...)
+  for i, k in ipairs(tab.sort(self.callbacks)) do
+    func = self.callbacks[k]
+    if func ~= nil then
+      pcall(func, ...)
+    end
+  end
+end
 
 playdate = {}
 
@@ -34,9 +57,9 @@ function playdate.connected()
 end
 
 _norns.playdate = {}
-_norns.playdate.add_hooks = {}
-_norns.playdate.remove_hooks = {}
-_norns.playdate.event_hooks = {}
+_norns.playdate.mod_add = Hook.new()
+_norns.playdate.mod_remove = Hook.new()
+_norns.playdate.mod_event = Hook.new()
 
 function _norns.playdate.init()
   playdate.add = function(id, name, dev)
@@ -52,20 +75,16 @@ end
 
 function _norns.playdate.add(id, name, dev)
   print("playdate add: " .. id .. " " .. name)
-  for _, hook in ipairs(_norns.playdate.add_hooks) do
-    hook(id, name, dev)
-  end
-  serial.send(dev, "echo off\n")
   playdate.dev = dev
+  playdate.send("echo off")
+  _norns.playdate.mod_add(id, name, dev)
   playdate.add(id, name, dev)
 end
 
 function _norns.playdate.remove(id)
   print("playdate remove: " .. id)
-  for _, hook in ipairs(_norns.playdate.remove_hooks) do
-    hook(id)
-  end
   playdate.dev = nil
+  _norns.playdate.mod_remove(id)
   playdate.remove(id)
 end
 
@@ -103,9 +122,7 @@ function _norns.playdate.event(id, line)
         end
       end
     else
-      for _, hook in ipairs(_norns.playdate.event_hooks) do
-        hook(id, line)
-      end
+      _norns.playdate.mod_event(id, line)
       if playdate.event ~= nil then
         playdate.event(line)
       end
@@ -123,7 +140,7 @@ function _norns.playdate.event(id, line)
   end
 end
 
-mod.hook.register("system_startup", "playdate device", function()
+mod.hook.register("system_pre_device_scan", "playdate device handler", function()
   serial.handler {
     id = "playdate",
     match = function(vendor, model)
