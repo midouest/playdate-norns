@@ -28,7 +28,6 @@ playdate = {}
 
 function playdate.send(msg)
   if playdate.dev then
-    -- print(msg)
     local cmd = "msg "..msg.."\n"
     _norns.serial_send(playdate.dev, cmd)
   end
@@ -76,7 +75,7 @@ end
 function _norns.playdate.add(id, name, dev)
   print("playdate add: " .. id .. " " .. name)
   playdate.dev = dev
-  playdate.send("echo off")
+    _norns.serial_send(playdate.dev, "echo off\n")
   _norns.playdate.mod_add(id, name, dev)
   playdate.add(id, name, dev)
 end
@@ -141,10 +140,10 @@ function _norns.playdate.event(id, line)
 end
 
 mod.hook.register("system_pre_device_scan", "playdate device handler", function()
-  serial.handler {
+  serial.add_handler {
     id = "playdate",
-    match = function(vendor, model)
-      return vendor == "Panic_Inc" and model == "Playdate"
+    match = function(attrs)
+      return attrs.vendor == "Panic_Inc" and attrs.model == "Playdate"
     end,
     configure = function(tio)
       tio.ispeed = serial.B115200
