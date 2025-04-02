@@ -139,28 +139,26 @@ function _norns.playdate.event(id, line)
   end
 end
 
-mod.hook.register("system_pre_device_scan", "playdate device handler", function()
-  serial.add_handler {
-    id = "playdate",
-    match = function(attrs)
-      return attrs.vendor == "Panic_Inc" and attrs.model == "Playdate"
-    end,
-    configure = function(tio)
-      tio.ispeed = serial.B115200
-      tio.ospeed = serial.B115200
-      tio.cflag = tio.cflag | serial.CS8 | serial.CLOCAL | serial.CREAD
-      tio.iflag = tio.iflag & ~(serial.IXON | serial.IXOFF | serial.IXANY)
-      tio.oflag = 0
-      tio.lflag = 0
-      tio.cc[serial.VMIN] = 0
-      tio.cc[serial.VTIME] = 5
-      return tio
-    end,
-    add = _norns.playdate.add,
-    remove = _norns.playdate.remove,
-    event = _norns.playdate.event,
-  }
-end)
+serial.add_handler {
+  id = "playdate",
+  match = function(attrs)
+    return attrs.vendor == "Panic_Inc" and attrs.model == "Playdate"
+  end,
+  configure = function(term)
+    term.ispeed = serial.speed.B115200
+    term.ospeed = serial.speed.B115200
+    term.cflag = term.cflag | serial.cflag.CS8 | serial.cflag.CLOCAL | serial.cflag.CREAD
+    term.iflag = term.iflag & ~(serial.iflag.IXON | serial.iflag.IXOFF | serial.iflag.IXANY)
+    term.oflag = 0
+    term.lflag = 0
+    term.cc[serial.cc.VMIN] = 0
+    term.cc[serial.cc.VTIME] = 5
+    return term
+  end,
+  add = _norns.playdate.add,
+  remove = _norns.playdate.remove,
+  event = _norns.playdate.event,
+}
 
 mod.hook.register("script_post_cleanup", "cleanup playdate device handlers", function()
   _norns.playdate.init()
