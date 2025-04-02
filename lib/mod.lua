@@ -62,7 +62,7 @@ _norns.playdate.mod_event = Hook.new()
 
 function _norns.playdate.init()
   playdate.add = function(id, name, dev)
-      print(">>>>>> playdate.add / " .. id .. " / " .. name)
+    print(">>>>>> playdate.add / " .. id .. " / " .. name)
   end
   playdate.remove = function(id) print(">>>>>> playdate.remove " .. id) end
   playdate.event = nil
@@ -75,7 +75,7 @@ end
 function _norns.playdate.add(id, name, dev)
   print("playdate add: " .. id .. " " .. name)
   playdate.dev = dev
-    _norns.serial_send(playdate.dev, "echo off\n")
+  _norns.serial_send(playdate.dev, "echo off\n")
   _norns.playdate.mod_add(id, name, dev)
   playdate.add(id, name, dev)
 end
