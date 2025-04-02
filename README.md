@@ -58,9 +58,9 @@ Called continuously with the accelerometer vector.
 
 Called whenever a button is pressed or released. `n` is one of L, R, U, D, A, B or M. `s` is 1 for pressed and 0 for released.
 
-#### `function playdate.crank(delta)`
+#### `function playdate.crank(angle)`
 
-Called whenever the crank is turned. Delta is the amount of degrees that the crank was turned.
+Called whenever the crank is turned. `angle` is the current angle of the crank in degrees.
 
 #### `function playdate.crankdock(s)`
 
