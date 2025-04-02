@@ -35,7 +35,7 @@ end
 
 function playdate.run(path)
   if playdate.dev then
-      _norns.serial_send(playdate.dev, "run "..path.."\n")
+    _norns.serial_send(playdate.dev, "run "..path.."\n")
   end
 end
 
