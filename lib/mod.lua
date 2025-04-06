@@ -1,5 +1,4 @@
 local mod = require('core/mods')
-local serial = require('core/serial')
 local tab = require 'tabutil'
 
 local Hook = {}
